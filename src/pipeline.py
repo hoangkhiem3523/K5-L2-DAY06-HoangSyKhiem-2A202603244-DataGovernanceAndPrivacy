@@ -54,7 +54,37 @@ def load(ctx: RunContext) -> dict:
 
 # ---------------------------------------------------------------- 02 process
 def _score_image(img_path: Path, camera_id: str, light: str) -> dict:
-    """Extract camera- and lighting-calibrated defect scores for T02."""
+    """Extract camera- and lighting-calibrated defect scores for T02.
+
+    Mỗi ảnh được chấm 4 điểm lỗi, mỗi điểm nằm trong [0, 1] (0 = không thấy lỗi):
+
+        s_blur, s_dark, s_glare, s_comp
+
+    Điểm tổng hợp và quyết định:
+
+        score = max(s_blur, s_dark, s_glare, s_comp)
+        score > 0.3  ->  pred_defect_type = loại lỗi có điểm cao nhất,
+                         pred_action = "RECAPTURE"
+        score <= 0.3 ->  pred_defect_type = "none", pred_action = "KEEP"
+
+    Args:
+        img_path: đường dẫn tới file ảnh.
+        camera_id: "cam_A" hoặc "cam_B". Quyết định baseline độ nét (cam_B có
+            thấu kính mềm hơn nên Laplacian nền thấp hơn).
+        light: "day", "dusk" hoặc "night". Quyết định ngưỡng độ sáng (ảnh đêm
+            vốn tối nên không được coi là lỗi "dark" theo cùng ngưỡng ban ngày).
+
+    Returns:
+        dict gồm score, pred_defect_type, pred_action, reason.
+
+    Ký hiệu dùng trong các công thức bên dưới:
+        g          : ảnh xám float32, thang 0..255.
+        lap        : phương sai của ảnh sau khi lọc Laplacian (độ nét; cao = nét).
+        mean       : độ sáng trung bình của g.
+        frac_dark  : tỉ lệ pixel có g < 30.
+        sat        : tỉ lệ pixel bão hòa, g > 245 (frac_saturated).
+        p95        : phân vị thứ 95 của g.
+    """
     img = np.asarray(Image.open(img_path))
     g = to_gray(img)
     lap = laplacian_variance(img)
@@ -63,6 +93,15 @@ def _score_image(img_path: Path, camera_id: str, light: str) -> dict:
     # 1. Blur score:
     # cam_A baseline lap ~1000-2200; cam_B soft-lens optical baseline ~180-360.
     # Blurry images have lap < 15. Normalize by optical baseline.
+    #
+    # Công thức:
+    #     lap_norm = lap / baseline            (baseline: cam_A = 1000, cam_B = 250)
+    #     s_blur   = 1 - lap_norm / 0.15       nếu lap_norm < 0.15, ngược lại 0
+    # Ảnh càng ít cạnh sắc thì lap_norm càng gần 0 và s_blur càng gần 1.
+    # Điểm giảm tuyến tính về 0 tại lap_norm = 0.15, nên ảnh nét bình thường
+    # (lap_norm >= 0.15) không bị tính là mờ.
+    # NOTE: baseline 250/1000 và ngưỡng 0.15 là hằng số viết cứng, chưa được
+    # ước lượng từ tập dev theo (camera_id, light).
     lap_baseline = 250.0 if camera_id == "cam_B" else 1000.0
     lap_norm = lap / lap_baseline
     s_blur = max(0.0, float(1.0 - lap_norm / 0.15)) if lap_norm < 0.15 else 0.0
@@ -71,6 +110,14 @@ def _score_image(img_path: Path, camera_id: str, light: str) -> dict:
     # Day normal mean is ~120, dusk ~90, night ~32.
     # If day/dusk, defect dark has mean < 40 and dark > 0.50.
     # If night, normal has dark ~0.50-0.65; defect dark has mean < 15 and dark > 0.85.
+    #
+    # Công thức (chỉ tính khi thỏa cả hai điều kiện, ngược lại s_dark = 0):
+    #     night      : mean < 15 và frac_dark > 0.85
+    #                  s_dark = min(1, 0.98 - mean / 15)
+    #     day/dusk   : mean < 40 và frac_dark > 0.50
+    #                  s_dark = min(1, 1 - mean / 40)
+    # Ảnh đêm bình thường vốn có frac_dark ~0.50-0.65 nên ngưỡng ban đêm khắt
+    # khe hơn nhiều, để không báo lỗi nhầm. Mean càng thấp thì điểm càng cao.
     if light == "night":
         if bs["mean"] < 15.0 and bs["frac_dark"] > 0.85:
             s_dark = float(min(1.0, 0.98 - bs["mean"] / 15.0))
@@ -84,6 +131,14 @@ def _score_image(img_path: Path, camera_id: str, light: str) -> dict:
 
     # 3. Glare score:
     # Localized overexposure/specular reflection. Normal images have sat < 0.002.
+    #
+    # Công thức (chỉ tính khi sat > 0.003, hoặc p95 > 240 và mean > 140):
+    #     s_glare = min(1, sat * 50 + b)
+    #     b = 1.0 nếu sat > 0.02 (vùng cháy lớn), ngược lại b = 0.5
+    # sat là tỉ lệ pixel quá sáng nên là dấu hiệu trực tiếp của lóa. Điều kiện
+    # thứ hai (p95, mean) bắt các ảnh sáng đều và cháy nhẹ mà sat còn thấp.
+    # NOTE: sat đo trên toàn ảnh nên lóa nhỏ cục bộ (ví dụ trên biển số) có
+    # thể có sat rất thấp và bị bỏ sót.
     sat = bs["frac_saturated"]
     if sat > 0.003 or (bs["p95"] > 240.0 and bs["mean"] > 140.0):
         s_glare = float(min(1.0, sat * 50.0 + (1.0 if sat > 0.02 else 0.5)))
@@ -92,6 +147,17 @@ def _score_image(img_path: Path, camera_id: str, light: str) -> dict:
 
     # 4. Compression (JPEG blockiness) score:
     # Contrast across 8x8 block boundaries vs intra-block step.
+    #
+    # JPEG nén theo khối 8x8 nên khi nén nặng, giá trị nhảy mạnh tại biên khối.
+    # Với mỗi chiều (ngang h, dọc v):
+    #     diff_*    = mean |g tại cột/hàng 7 - g tại cột/hàng 8|, mỗi 8 pixel (biên khối)
+    #     diff_in_* = mean |g tại cột/hàng 3 - g tại cột/hàng 4|, mỗi 8 pixel (giữa khối)
+    #     blocky    = (diff_h / (diff_in_h + eps) + diff_v / (diff_in_v + eps)) / 2
+    # với eps = 1e-4 để tránh chia cho 0. Nếu biên khối không khác gì trong
+    # khối thì blocky ~ 1; nén càng nặng thì blocky càng lớn.
+    #     s_comp = min(1, (blocky - 2.0) / 1.5)  nếu blocky > 2.2, ngược lại 0
+    # NOTE: trong vùng rất tối, độ nhảy ở cả biên khối và trong khối đều nhỏ
+    # nên tỉ số kém ổn định và dễ bỏ sót lỗi nén.
     diff_h = np.abs(g[:, 7:-1:8] - g[:, 8::8]).mean()
     diff_in_h = np.abs(g[:, 3:-1:8] - g[:, 4::8]).mean()
     diff_v = np.abs(g[7:-1:8, :] - g[8::8, :]).mean()
@@ -104,6 +170,7 @@ def _score_image(img_path: Path, camera_id: str, light: str) -> dict:
 
     # If an image is severely dark / underexposed, low laplacian variance is a symptom
     # of darkness rather than optical defocus blur. Suppress blur score when dark.
+    # Hệ quả: ảnh vừa tối vừa mờ chỉ được ghi nhận là "dark", không phải "blur".
     if s_dark > 0.4:
         s_blur = 0.0
 
@@ -113,6 +180,8 @@ def _score_image(img_path: Path, camera_id: str, light: str) -> dict:
         "glare": s_glare,
         "compression": s_comp,
     }
+    # Gộp điểm: lấy lỗi có điểm cao nhất. Cách này đơn giản và dễ giải thích,
+    # nhưng không cộng dồn khi ảnh có nhiều lỗi cùng lúc.
     top_defect = max(scores, key=scores.get)
     max_score = float(scores[top_defect])
 
