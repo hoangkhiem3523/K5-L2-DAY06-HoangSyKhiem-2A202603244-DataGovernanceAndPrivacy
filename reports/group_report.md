@@ -200,7 +200,7 @@ pytest -v
 | Hoang Sy Khiem | hoangkhiem3523 <hoangsikhiem3523@gmail.com> | Lead / Core Algorithm / Integration | `41a89d9`, `HEAD`: Xây dựng `src/pipeline.py`, chuẩn hóa `cam_B` & lighting, tối ưu Defect Recall 85% | Có |
 | Nguyen Dinh Phu | Nguyen Dinh Phu <nguyendinhphu200@gmail.com> | Data & Baseline Engineer | `4ccc18c`: Phân tích thống kê dữ liệu `reports/eda/`, xây dựng baseline Laplacian và phân tích failure cases | Không |
 | Nguyen Khai Hung | Nguyen Khai Hung <hung1512004kh@gmail.com> | Core Algorithm Engineer | `c6bd229`: Bổ sung technical docstrings và chi tiết công thức toán học cho defect score | Không |
-| Tran Duc Thien | thienqa <thienqa@example.com> | QA & Metrics Lead | `HEAD`: Thực thi `src.evaluate`, xác thực test suite `tests/test_t02_pipeline.py` | Không |
+| Tran Duc Thien | Tiny208 <thienhoang20803@gmail.com> | QA & Metrics Lead | `HEAD`: Thực thi `src.evaluate`, bổ sung edge-case test suite `tests/test_t02_pipeline.py` | Không |
 | Le Hoang Duc | Tsukito235711 <hoangduc290104@gmail.com> | Human Reviewer & Reporting | `add1cad`, PR #1: Thẩm định hàng đợi reviewer `reports/review_queue.csv`, hoàn thiện báo cáo | Không |
 
 ## 11 · References

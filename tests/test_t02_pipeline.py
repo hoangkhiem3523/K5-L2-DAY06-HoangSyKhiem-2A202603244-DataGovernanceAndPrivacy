@@ -70,3 +70,46 @@ def test_t02_dark_defect_detected(tmp_path):
     assert res["pred_defect_type"] == "dark"
     assert res["pred_action"] == "RECAPTURE"
     assert res["score"] > 0.8
+
+
+def test_t02_extreme_glare_saturation(tmp_path):
+    """Edge case: Extreme specular overexposure / whiteout (pixel saturation)."""
+    # Create an image with large blown-out saturated glare region (pixels = 255)
+    clean_arr = np.full((180, 320, 3), 120, dtype=np.uint8)
+    clean_arr[40:140, 80:240, :] = 255  # Overexposed glare spot > 25% area
+    p = _make_sample_image(tmp_path, "extreme_glare.jpg", clean_arr)
+
+    res = _score_image(p, camera_id="cam_A", light="day")
+    assert res["pred_defect_type"] == "glare"
+    assert res["pred_action"] == "RECAPTURE"
+    assert res["score"] >= 0.8
+
+
+def test_t02_border_lighting_condition_dusk(tmp_path):
+    """Edge case: Dusk / twilight condition with lower natural contrast should not false-alarm."""
+    rng = np.random.default_rng(101)
+    # Typical dusk range: mid-tones between 60 and 130 with texture
+    dusk_arr = rng.integers(60, 130, size=(180, 320, 3), dtype=np.uint8)
+    p = _make_sample_image(tmp_path, "clean_dusk.jpg", dusk_arr)
+
+    res = _score_image(p, camera_id="cam_A", light="dusk")
+    assert res["pred_defect_type"] == "none"
+    assert res["pred_action"] == "KEEP"
+    assert res["score"] <= 0.3
+
+
+def test_t02_compression_defect_detected(tmp_path):
+    """Edge case: Severe JPEG blockiness artifact."""
+    clean_arr = np.zeros((180, 320, 3), dtype=np.uint8)
+    ramp = np.linspace(40, 220, 320, dtype=np.uint8)
+    clean_arr[:, :, 0] = ramp
+    clean_arr[:, :, 1] = ramp
+    clean_arr[:, :, 2] = ramp
+    comp_arr = jpeg(clean_arr, severity=2)
+    p = _make_sample_image(tmp_path, "severe_comp.jpg", comp_arr)
+
+    res = _score_image(p, camera_id="cam_A", light="day")
+    assert res["pred_defect_type"] == "compression"
+    assert res["pred_action"] == "RECAPTURE"
+    assert res["score"] > 0.5
+
