@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Slide Thuyết Trình: T02 · Raw QC Triage Pipeline</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card-bg: rgba(30, 41, 59, 0.85);
+      --accent: #38bdf8;
+      --accent-grad: linear-gradient(135deg, #38bdf8 0%, #818cf8 100%);
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --success: #34d399;
+      --warning: #fbbf24;
+      --danger: #f87171;
+      --border: rgba(148, 163, 184, 0.15);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow: hidden;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    /* Header nav */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 24px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(15, 23, 42, 0.9);
+      backdrop-filter: blur(10px);
+    }
+    .badge {
+      background: var(--accent-grad);
+      color: #0f172a;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 999px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .slide-counter {
+      color: var(--text-muted);
+      font-size: 13px;
+      font-weight: 600;
+    }
+    /* Main slide container */
+    main {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      position: relative;
+    }
+    .slide {
+      display: none;
+      width: 100%;
+      max-width: 1050px;
+      height: 82vh;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 40px 48px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(16px);
+      flex-direction: column;
+      animation: fadeIn 0.3s ease-in-out;
+      overflow-y: auto;
+    }
+    .slide.active { display: flex; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    /* Typography */
+    .slide-tag {
+      color: var(--accent);
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+    }
+    h1 {
+      font-size: 38px;
+      font-weight: 800;
+      line-height: 1.2;
+      background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 12px;
+    }
+    h2 {
+      font-size: 28px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 16px;
+    }
+    p.lead {
+      color: var(--text-muted);
+      font-size: 16px;
+      line-height: 1.6;
+      margin-bottom: 24px;
+    }
+    /* Grids & Cards */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; flex: 1; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; flex: 1; }
+    .card {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+    }
+    .card h3 {
+      font-size: 17px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .card p, .card li {
+      font-size: 14px;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+    ul { list-style: none; }
+    ul li { margin-bottom: 8px; position: relative; padding-left: 20px; }
+    ul li::before {
+      content: "•";
+      color: var(--accent);
+      position: absolute;
+      left: 6px;
+      font-weight: bold;
+    }
+    /* Table */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+      margin-top: 10px;
+    }
+    th, td {
+      padding: 10px 12px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+    th {
+      color: var(--text-muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 12px;
+    }
+    td.highlight {
+      color: var(--success);
+      font-weight: 700;
+    }
+    /* Presenter note box */
+    .presenter-note {
+      margin-top: auto;
+      background: rgba(56, 189, 248, 0.08);
+      border-left: 4px solid var(--accent);
+      border-radius: 0 8px 8px 0;
+      padding: 12px 16px;
+      font-size: 13px;
+      color: #bae6fd;
+    }
+    .presenter-note strong { color: #fff; }
+    /* Footer controls */
+    footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 24px;
+      border-top: 1px solid var(--border);
+      background: rgba(15, 23, 42, 0.9);
+    }
+    .btn-group { display: flex; gap: 10px; }
+    button {
+      background: rgba(30, 41, 59, 0.8);
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 8px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 13px;
+      transition: all 0.2s;
+    }
+    button:hover { background: rgba(56, 189, 248, 0.2); border-color: var(--accent); }
+    .btn-primary { background: var(--accent-grad); color: #0f172a; border: none; }
+    .btn-primary:hover { opacity: 0.9; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <span class="badge">Track T02</span>
+      <span style="font-weight: 600; font-size: 14px;">Raw QC Triage Pipeline: Ảnh Mờ, Lóa & Thiếu Sáng</span>
+    </div>
+    <div class="slide-counter" id="counter">Slide 1 / 6</div>
+  </header>
+
+  <main>
+    <!-- SLIDE 1: TITLE & OVERVIEW -->
+    <section class="slide active" id="slide-1">
+      <div class="slide-tag">Thử Thách T02 · Đề Tài Day 06 Data Lab</div>
+      <h1>Raw QC Triage: Tự Động Phân Loại & Lọc Khiếm Khuyết Ảnh Thô</h1>
+      <p class="lead">Hệ thống lọc chất lượng hình ảnh sơ bộ (Edge Triage) cho xe tự hành & camera giám sát giao thông — Tối ưu hóa chi phí Human-in-the-loop dưới ngân sách cứng B = 20 ảnh.</p>
+      
+      <div class="grid-2">
+        <div class="card">
+          <h3 style="color: var(--accent);">👥 Đội Ngũ Thực Hiện (Nhóm G01)</h3>
+          <ul>
+            <li><strong>Hoàng Sỹ Khiêm (Lead):</strong> Kiến trúc pipeline, thuật toán hiệu chuẩn, tích hợp hệ thống.</li>
+            <li><strong>Nguyễn Đình Phú:</strong> Khám phá dữ liệu (EDA), xây dựng mô hình baseline & phân tích ca lỗi.</li>
+            <li><strong>Nguyễn Khải Hưng:</strong> Phát triển docstring kỹ thuật & mô hình toán học chấm điểm lỗi.</li>
+            <li><strong>Trần Đức Thiên:</strong> Thiết kế bộ unit test biên (Edge-case tests) & kiểm định QA.</li>
+            <li><strong>Lê Hoàng Đức:</strong> Thẩm định hàng đợi reviewer (Review Queue) & tài liệu bàn giao.</li>
+          </ul>
+        </div>
+        <div class="card" style="justify-content: center; align-items: center; text-align: center; background: rgba(56, 189, 248, 0.05);">
+          <div style="font-size: 48px; font-weight: 900; color: var(--accent);">85.0%</div>
+          <div style="font-size: 14px; font-weight: 600; color: #fff; margin-bottom: 6px;">Defect Recall@20</div>
+          <div style="font-size: 13px; color: var(--text-muted); max-width: 280px;">Tóm sống 17/20 ảnh lỗi trong Top 20 ưu tiên với thời gian thực thi chỉ <strong>0.43 giây</strong></div>
+        </div>
+      </div>
+
+      <div class="presenter-note">
+        <strong>💡 Lời mở đầu khi trình bày:</strong> "Kính thưa thầy, dự án của nhóm em giải quyết bài toán cốt tử của thị giác máy tính: 'Rác vào thì rác ra'. Chúng em xây dựng một pipeline 5 bước gọn nhẹ, tự động phát hiện và bốc trúng 85% ảnh hỏng cho người duyệt trong chớp mắt mà không cần GPU đắt đỏ."
+      </div>
+    </section>
+
+    <!-- SLIDE 2: PROBLEM & BOTTLENECK -->
+    <section class="slide" id="slide-2">
+      <div class="slide-tag">Bối Cảnh Thực Tế & Điểm Nghẽn Kỹ Thuật</div>
+      <h2>Điểm Nghẽn Nhân Lực (Human Bottleneck) & Bối Cảnh Hệ Thống</h2>
+      <p class="lead">Hàng trăm ngàn frame ảnh thô đổ về mỗi ngày từ đội xe thu thập, nhưng ngân sách người duyệt (Human Reviewer) bị giới hạn cứng.</p>
+
+      <div class="grid-3">
+        <div class="card">
+          <h3 style="color: var(--danger);">1. Sự Cố Dữ Liệu</h3>
+          <p>Ảnh chụp ngoài đường liên tục bị dính lỗi vật lý: <strong>mờ do rung/mưa (Blur)</strong>, <strong>lóa đèn pha (Glare)</strong>, <strong>tối đen lúc nửa đêm (Dark)</strong> hoặc <strong>vỡ khối (Compression)</strong>.</p>
+        </div>
+        <div class="card">
+          <h3 style="color: var(--warning);">2. Giới Hạn Ngân Sách</h3>
+          <p>Không thể thuê nhân lực soi thủ công hàng trăm ngàn ảnh. Đội review chỉ đủ sức duyệt tối đa <strong>B = 20 ảnh mỗi batch</strong> trước khi đưa vào dán nhãn.</p>
+        </div>
+        <div class="card">
+          <h3 style="color: var(--success);">3. Mục Tiêu Của Dev</h3>
+          <p>Xây dựng bộ lọc thông minh: <strong>Xếp hạng (Rank)</strong> đưa 20 tấm tệ nhất lên đầu, đồng thời báo đúng mã lỗi để kích hoạt bảo trì hoặc phơi sáng lại.</p>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top: 16px;">
+        <h3 style="color: var(--accent);">⚖️ Quy Tắc Nghiệp Vụ Chốt Hạ (Business Decision Rules)</h3>
+        <p style="font-size: 14px; color: var(--text);">
+          • <strong>GO (QC_TRIAGE_PASSED):</strong> Nếu tỷ lệ ảnh hỏng trong batch kiểm tra ≤ 20% $\to$ Cho phép giải phóng dữ liệu sang pipeline gán nhãn.<br>
+          • <strong>REWORK (EXCESSIVE_DEFECTS):</strong> Nếu tỷ lệ ảnh hỏng > 20% $\to$ Chặn xuất bản, yêu cầu đội xe lau ống kính và đi chụp lại (recapture).
+        </p>
+      </div>
+
+      <div class="presenter-note">
+        <strong>💡 Điểm nhấn phản xạ:</strong> "Reviewer chỉ có mắt soi 20 tấm. Nếu thuật toán ngu chọn bừa 20 tấm bình thường thì 20 tấm lỗi lọt vào model AI sẽ gây tai nạn chết người. Vì vậy bài toán này là tối ưu độ phủ lỗi (Recall) trong ngân sách 20 ảnh."
+      </div>
+    </section>
+
+    <!-- SLIDE 3: BASELINE FAILURES -->
+    <section class="slide" id="slide-3">
+      <div class="slide-tag">Thực Nghiệm & Thất Bại Của Thuật Toán Cũ</div>
+      <h2>Tại Sao Thuật Toán Baseline Thất Bại Thảm Hại?</h2>
+      <p class="lead">Mô hình baseline dùng 1 ngưỡng phương sai Laplacian toàn cục duy nhất, dẫn đến 3 cái bẫy kinh điển:</p>
+
+      <div class="grid-3">
+        <div class="card" style="border-top: 4px solid var(--danger);">
+          <h3>Bẫy 1: Phần Cứng Camera</h3>
+          <p style="margin-bottom: 8px;"><strong>Cam A</strong> nét căng (~1000 điểm), còn <strong>Cam B</strong> dùng kính quang học mềm (~250 điểm).</p>
+          <p style="color: var(--danger); font-size: 13px;">❌ <strong>Hậu quả:</strong> 100% ảnh sạch của Cam B bị phán oan là ảnh mờ (False Alarm) do dùng chung một ngưỡng đo!</p>
+        </div>
+        <div class="card" style="border-top: 4px solid var(--warning);">
+          <h3>Bẫy 2: Lóa Đèn Cục Bộ</h3>
+          <p style="margin-bottom: 8px;">Đèn pha ô tô chiếu thẳng làm cháy trắng một góc ảnh, nhưng xung quanh đường nét vẫn nét.</p>
+          <p style="color: var(--warning); font-size: 13px;">❌ <strong>Hậu quả:</strong> Điểm Laplacian vẫn cao $\to$ Baseline bỏ sót <strong>100%</strong> các trường hợp lóa sáng (Recall Glare = 0%)!</p>
+        </div>
+        <div class="card" style="border-top: 4px solid #f43f5e;">
+          <h3>Bẫy 3: Ban Đêm Trời Tối</h3>
+          <p style="margin-bottom: 8px;">Ban đêm tự nhiên ít chi tiết viền hơn ban ngày, điểm độ nét sụt giảm tự nhiên.</p>
+          <p style="color: #f43f5e; font-size: 13px;">❌ <strong>Hậu quả:</strong> Baseline phán bừa <strong>75% ảnh đêm</strong> là ảnh hỏng, gây lãng phí công sức reviewer.</p>
+        </div>
+      </div>
+
+      <div class="presenter-note">
+        <strong>💡 Bí kíp trả lời thầy:</strong> "Thưa thầy, đây chính là bằng chứng trong thư mục `reports/failure_cases/` của nhóm. Baseline chỉ đo một tiêu chí duy nhất nên hoàn toàn 'mù' trước sự khác biệt phần cứng và ánh sáng môi trường."
+      </div>
+    </section>
+
+    <!-- SLIDE 4: OUR SOLUTION & PIPELINE -->
+    <section class="slide" id="slide-4">
+      <div class="slide-tag">Kiến Trúc Đề Xuất (PoC Pipeline Architecture)</div>
+      <h2>Quy Trình 5 Bước & Thuật Toán Hiệu Chuẩn Bối Cảnh</h2>
+      <p class="lead">Nhóm thiết kế pipeline chuẩn hóa 5 bước (Load $\to$ Process $\to$ Rank $\to$ Review $\to$ Decide) hoàn toàn chạy offline.</p>
+
+      <div class="grid-2">
+        <div class="card">
+          <h3 style="color: var(--accent);">⚙️ 4 Trạm Cảm Biến Hiệu Chuẩn Toán Học</h3>
+          <ul>
+            <li><strong>Chuẩn hóa Camera (Blur):</strong> $\text{lap\_norm} = \frac{\text{lap}}{\text{baseline}}$ (Cam A = 1000, Cam B = 250). Chỉ phạt khi độ nét tụt &lt; 15% so với chuẩn camera.</li>
+            <li><strong>Nhận diện bối cảnh đêm (Dark):</strong> Ban đêm chỉ báo lỗi khi tắt đèn ngúm ($\text{mean} &lt; 15$ VÀ $\text{frac\_dark} &gt; 85\%$).</li>
+            <li><strong>Bản đồ bão hòa (Glare):</strong> Đo tỷ lệ điểm cháy sáng $\text{sat} &gt; 0.003$ để tóm gọn các đốm lóa cục bộ.</li>
+            <li><strong>Đo bước nhảy khối (Compression):</strong> Đo chênh lệch pixel ở biên khối 8x8 so với trong lòng khối.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3 style="color: var(--success);">🛡️ Cơ Chế Triệt Tiêu Lỗi Chéo (Defect Masking)</h3>
+          <p style="margin-bottom: 12px;">Ảnh đen xì thì không có viền (edges), nếu đo ngây thơ sẽ bị phán nhầm thành lỗi mờ (blur).</p>
+          <div style="background: rgba(0,0,0,0.3); padding: 12px; border-radius: 8px; font-family: monospace; font-size: 13px; color: var(--accent);">
+            if s_dark > 0.4:<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;s_blur = 0.0 &nbsp;&nbsp;# Triệt tiêu lỗi mờ giả!
+          </div>
+          <p style="margin-top: 12px; font-size: 13px;">Nhờ vậy, thuật toán báo đúng 100% bệnh gốc rễ là <code>dark</code> để kỹ thuật viên tăng phơi sáng.</p>
+        </div>
+      </div>
+
+      <div class="presenter-note">
+        <strong>💡 Điểm nhấn:</strong> "Toàn bộ tham số 1000, 250, 40, 15 được nhóm tính toán trực tiếp từ phân tích dữ liệu thực nghiệm (EDA) trên tập `dev`, tuyệt đối không dùng nhãn tập eval để đảm bảo tính minh bạch."
+      </div>
+    </section>
+
+    <!-- SLIDE 5: EXPERIMENTAL RESULTS -->
+    <section class="slide" id="slide-5">
+      <div class="slide-tag">Thực Nghiệm & Đánh Giá Đối Sánh (Benchmark)</div>
+      <h2>Bảng Đối Sánh Kết Quả: Baseline vs PoC</h2>
+      <p class="lead">Đánh giá trên cùng tập testset chuẩn (40 ảnh split eval, Seed 42, Budget = 20):</p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Chỉ Số Đo Lường (Metric)</th>
+            <th>Nhóm Dữ Liệu</th>
+            <th>Baseline</th>
+            <th>PoC Nhóm G01</th>
+            <th>Mức Độ Cải Thiện (Δ)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Defect Recall@20 (Chỉ số chính)</strong></td>
+            <td>Toàn bộ (all)</td>
+            <td>0.5000 (10/20)</td>
+            <td class="highlight">0.8500 (17/20)</td>
+            <td class="highlight">+70.0% tương đối</td>
+          </tr>
+          <tr>
+            <td><strong>Precision@20</strong></td>
+            <td>Toàn bộ (all)</td>
+            <td>0.5000</td>
+            <td class="highlight">0.8500</td>
+            <td class="highlight">+70.0% tương đối</td>
+          </tr>
+          <tr>
+            <td><strong>Độ chính xác phân loại lỗi (Type Accuracy)</strong></td>
+            <td>Toàn bộ (all)</td>
+            <td>n/a (chỉ bắt mờ)</td>
+            <td class="highlight">0.7500</td>
+            <td class="highlight">75.0% đúng bệnh</td>
+          </tr>
+          <tr>
+            <td>Báo oan ban đêm (False Alarm Night)</td>
+            <td>light = night</td>
+            <td>0.7500 (75%)</td>
+            <td class="highlight">0.2500 (25%)</td>
+            <td class="highlight">-66.7% báo oan</td>
+          </tr>
+          <tr>
+            <td>Báo oan chập tối (False Alarm Dusk)</td>
+            <td>light = dusk</td>
+            <td>0.5000 (50%)</td>
+            <td class="highlight">0.0000 (0%)</td>
+            <td class="highlight">Sạch 100% báo oan</td>
+          </tr>
+          <tr>
+            <td><strong>Thời gian thực thi / 100 ảnh</strong></td>
+            <td>all (CPU)</td>
+            <td>0.08 s</td>
+            <td class="highlight">0.43 s</td>
+            <td style="color: var(--text-muted);">&lt; 0.5s (Cực nhanh)</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="presenter-note">
+        <strong>💡 Đọc số liệu thuyết phục:</strong> "Thưa thầy, chúng em đã tăng tỷ lệ vớt lỗi từ 50% lên 85%, đồng thời dập tắt hoàn toàn báo oan lúc chập tối (0%) và giảm báo oan ban đêm xuống chỉ còn 25%."
+      </div>
+    </section>
+
+    <!-- SLIDE 6: CONCLUSION & GOVERNANCE -->
+    <section class="slide" id="slide-6">
+      <div class="slide-tag">Tổng Kết & Quản Trị Dữ Liệu (Governance)</div>
+      <h2>Công Cụ Trực Quan & Quyết Định Vận Hành</h2>
+      <p class="lead">Quy trình Human-in-the-loop hoàn chỉnh với báo cáo kiểm toán minh bạch.</p>
+
+      <div class="grid-2">
+        <div class="card">
+          <h3 style="color: var(--accent);">🖥️ Giao Diện Reviewer: Contact Sheet HTML</h3>
+          <p>File <code>out/poc/contact_sheet.html</code> cung cấp giao diện trực quan 4x5:</p>
+          <ul>
+            <li>Hiển thị trực quan 20 ảnh nguy cơ cao nhất kèm điểm số và nhãn lỗi đề xuất.</li>
+            <li>Cho phép chuyên gia đánh giá kiểm tra chéo (Override), bấm nút <strong>Export CSV</strong> để lưu nhật ký kiểm toán (Audit Trail).</li>
+            <li>Tạo file <code>decision.json</code> tự động ghi nhận quyết định GO / REWORK cùng lý do cụ thể.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3 style="color: var(--success);">🔒 Tuân Thủ Data Governance & Đạo Đức AI</h3>
+          <ul>
+            <li><strong>Chống rò rỉ dữ liệu (Data Leakage):</strong> Phân chia split theo cảnh gốc (Scene-level split), đảm bảo không trùng cảnh giữa dev và eval.</li>
+            <li><strong>Bảo vệ quyền riêng tư (Privacy):</strong> Dữ liệu 100% synthetic, hoàn toàn không chứa PII (khuôn mặt, biển số thật), tuân thủ Nghị định 13/2023/NĐ-CP.</li>
+            <li><strong>Tính toàn vẹn (Integrity):</strong> 100% file ảnh được bảo chứng bằng mã băm SHA-256 qua <code>manifest.csv</code>.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="presenter-note">
+        <strong>💡 Lời kết:</strong> "Dự án PoC T02 của nhóm G01 không chỉ là một bài toán thuật toán hình ảnh đơn thuần, mà là một quy trình Data Governance hoàn chỉnh từ khâu thu thập thô đến khi ra quyết định phát hành an toàn. Nhóm em xin cảm ơn thầy và hội đồng!"
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div style="font-size: 13px; color: var(--text-muted);">
+      Sử dụng phím mũi tên <strong>←</strong> và <strong>→</strong> trên bàn phím để chuyển slide
+    </div>
+    <div class="btn-group">
+      <button onclick="prevSlide()">← Trước</button>
+      <button class="btn-primary" onclick="nextSlide()">Tiếp Theo →</button>
+    </div>
+  </footer>
+
+  <script>
+    let currentSlide = 1;
+    const totalSlides = 6;
+
+    function showSlide(index) {
+      if (index < 1) index = 1;
+      if (index > totalSlides) index = totalSlides;
+      
+      document.querySelectorAll('.slide').forEach(s => s.classList.remove('active'));
+      const active = document.getElementById(`slide-${index}`);
+      if (active) active.classList.add('active');
+      
+      currentSlide = index;
+      document.getElementById('counter').innerText = `Slide ${currentSlide} / ${totalSlides}`;
+    }
+
+    function nextSlide() { showSlide(currentSlide + 1); }
+    function prevSlide() { showSlide(currentSlide - 1); }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ') { nextSlide(); }
+      else if (e.key === 'ArrowLeft') { prevSlide(); }
+    });
+  </script>
+</body>
+</html>
