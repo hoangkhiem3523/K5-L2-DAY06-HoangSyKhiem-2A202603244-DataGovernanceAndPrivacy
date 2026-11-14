@@ -9,7 +9,13 @@ KHÔNG phải nhãn chính thức của giảng viên. Hạng (rank) là hạng 
 from __future__ import annotations
 
 import argparse
+import sys
 from pathlib import Path
+
+# Thêm project root vào sys.path để chạy cả `python tools/baseline_failure_cases.py` lẫn module
+_ROOT = Path(__file__).resolve().parent.parent
+if str(_ROOT) not in sys.path:
+    sys.path.insert(0, str(_ROOT))
 
 import pandas as pd
 from PIL import Image, ImageDraw

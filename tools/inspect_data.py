@@ -13,7 +13,13 @@ Hai phần:
 from __future__ import annotations
 
 import argparse
+import sys
 from pathlib import Path
+
+# Thêm project root vào sys.path để chạy cả `python tools/inspect_data.py` lẫn `python -m tools.inspect_data`
+_ROOT = Path(__file__).resolve().parent.parent
+if str(_ROOT) not in sys.path:
+    sys.path.insert(0, str(_ROOT))
 
 import pandas as pd
 
