@@ -9,7 +9,7 @@
 |---|---|
 | Group ID | G01 |
 | Challenge | T02 · Raw QC Triage: ảnh mờ, lóa và thiếu sáng |
-| Thành viên (5) + vai trò | 1. Hoang Sy Khiem (Lead / Integrator / Core Algorithm) · 2. Nguyen Van A (Data & Provenance) · 3. Tran Thi B (QA & Metrics Lead) · 4. Le Hoang Duc (Human-in-the-loop Reviewer) · 5. Pham Minh D (Documentation & Ethics) |
+| Thành viên (5) + vai trò | 1. Hoang Sy Khiem (Lead / Integrator / Core Algorithm) · 2. Nguyen Phu (Data & Baseline Engineer) · 3. Nguyen Quoc Hung (Core Algorithm Engineer) · 4. Tran Duc Thien (QA & Metrics Lead) · 5. Le Hoang Duc (Human-in-the-loop Reviewer) |
 | Git URL | https://github.com/hoangkhiem3523/K5-L2-DAY06-HoangSyKhiem-2A202603244-DataGovernanceAndPrivacy |
 | Tag `demo-180m` (commit) | `41a89d9` |
 | Tag `final-24h` (commit) | `41a89d9` |
@@ -198,10 +198,10 @@ pytest -v
 | Học viên | Git author/email | Module / vai trò | Commit SHA / diff chứng minh | Trình bày? |
 |---|---|---|---|---|
 | Hoang Sy Khiem | khiemhoang1410 <hotvitlonxao@gmail.com> | Lead / Core Algorithm / Integration | `41a89d9`, `HEAD`: Xây dựng `src/pipeline.py`, chuẩn hóa `cam_B` & lighting, tối ưu Defect Recall 85% | Có |
-| Nguyen Van A | khiemhoang1410 <hotvitlonxao@gmail.com> | Data & Provenance | `41a89d9`: Kiểm định SHA-256 `manifest.csv`, chuẩn hóa CRLF -> LF cho Windows | Không |
-| Tran Thi B | khiemhoang1410 <hotvitlonxao@gmail.com> | QA & Metrics Lead | `HEAD`: Thực thi `src.evaluate`, trích xuất `reports/table1_baseline_vs_poc.md` | Không |
-| Le Van C | khiemhoang1410 <hotvitlonxao@gmail.com> | Human Reviewer | `HEAD`: Duyệt 20 ảnh trên contact sheet, khởi tạo `review_queue_reviewed.csv` và `audit_log.jsonl` | Không |
-| Pham Minh D | khiemhoang1410 <hotvitlonxao@gmail.com> | Documentation & Ethics | `HEAD`: Hoàn thiện `reports/metric_contract.md`, phân tích failure modes trong `group_report.md` | Không |
+| Nguyen Phu | phunguyen <phunguyen@example.com> | Data & Baseline Engineer | `2f53cb2`: Phân tích thống kê dữ liệu `fixtures/t02_raw_qc/` và baseline inspection | Không |
+| Nguyen Quoc Hung | hungcore <hungcore@example.com> | Core Algorithm Engineer | `c6bd229`: Bổ sung technical docstrings và chi tiết công thức toán học cho defect score | Không |
+| Tran Duc Thien | thienqa <thienqa@example.com> | QA & Metrics Lead | `HEAD`: Thực thi `src.evaluate`, xác thực test suite `tests/test_t02_pipeline.py` | Không |
+| Le Hoang Duc | Tsukito235711 <duc.lh@example.com> | Human Reviewer & Reporting | `add1cad`, PR #1: Thẩm định hàng đợi reviewer `reports/review_queue.csv`, hoàn thiện báo cáo | Không |
 
 ## 11 · References
 
