@@ -9,15 +9,15 @@
 ## 🖥️ SLIDE 1: GIỚI THIỆU & PHÂN CÔNG NHIỆM VỤ 5 THÀNH VIÊN
 
 * **Đề tài:** Raw QC Triage: Tự Động Lọc & Phân Loại Khiếm Khuyết Ảnh Thô (Track T02)
-* **Mục tiêu:** Tiền kiểm định chất lượng ảnh camera xe tự hành, bốc đúng 20 ảnh lỗi nặng nhất cho reviewer duyệt với chi phí thấp nhất.
+* **Mục tiêu:** Tiền kiểm định chất lượng ảnh camera xe tự hành, chọn lọc 20 ảnh lỗi nghiêm trọng nhất cho chuyên gia thẩm định với chi phí vận hành tối ưu.
 * **Phân công 5 thành viên (Nhóm G01):**
-  1. **Hoàng Sỹ Khiêm (Trưởng nhóm):** Điều phối, ghép bài, viết thuật toán cốt lõi, chạy toàn bộ pipeline.
-  2. **Nguyễn Đình Phú (Phụ trách Dữ liệu):** Phân tích thống kê dữ liệu đầu vào (EDA), làm baseline.
+  1. **Hoàng Sỹ Khiêm (Trưởng nhóm):** Điều phối, ghép bài, phát triển thuật toán cốt lõi, chạy toàn bộ pipeline.
+  2. **Nguyễn Đình Phú (Phụ trách Dữ liệu):** Phân tích thống kê dữ liệu đầu vào (EDA), xây dựng mô hình baseline.
   3. **Nguyễn Khải Hưng (Xử lý thuật toán):** Mô hình hóa toán học 4 công thức chấm điểm lỗi.
-  4. **Trần Đức Thiên (Kiểm tra & Ca khó):** Viết unit test biên (Edge-case tests), đo đạc chỉ số.
-  5. **Lê Hoàng Đức (Người duyệt):** Thẩm định hàng đợi reviewer, ghi log quyết định.
+  4. **Trần Đức Thiên (Kiểm tra & Ca khó):** Thiết kế bộ kiểm thử biên (Edge-case tests), đo đạc chỉ số.
+  5. **Lê Hoàng Đức (Người duyệt):** Thẩm định hàng đợi reviewer, ghi nhận nhật ký kiểm toán.
 * **Số liệu nổi bật:**
-  * **Recall@20:** 85.0% (bắt trúng 17/20 ảnh lỗi trong batch).
+  * **Recall@20:** 85.0% (phát hiện chính xác 17/20 ảnh lỗi trong batch).
   * **Thời gian thực thi:** 0.43 giây (chạy offline trên CPU thường).
 
 ---
@@ -33,27 +33,27 @@
 
 * **Thao tác cụ thể trên màn hình khi demo:**
   * **Bước 1 (Khiêm):** Mở file `configs/tracks/t02.yaml` nêu mục tiêu.
-  * **Bước 2 (Phú):** Mở file `fixtures/t02_raw_qc/images.csv` và show 1 ảnh tối đen mẫu `img_02_3.jpg`.
-  * **Bước 3 (Hưng + Khiêm):** Chạy `python -m src.main --track t02 --offline` và mở file `review_queue.csv`.
+  * **Bước 2 (Phú):** Mở file `fixtures/t02_raw_qc/images.csv` và trình chiếu 1 ảnh thiếu sáng mẫu `img_02_3.jpg`.
+  * **Bước 3 (Hưng + Khiêm):** Chạy lệnh `python -m src.main --track t02 --offline` và mở file `review_queue.csv`.
   * **Bước 4 (Đức):** Mở `out/poc/contact_sheet.html`, bấm xác nhận 1 ảnh lỗi và export file.
   * **Bước 5 (Khiêm):** Mở file `decision.json` (quyết định REWORK).
   * **Bước 6 (Thiên):** Mở bảng so sánh `reports/table1_baseline_vs_poc.md` và chỉ ra ca khó lóa đèn pha `glare_missed.png`.
 
 ---
 
-## 🖥️ SLIDE 3: BỐI CẢNH THỰC TẾ & BẪY CỦA THUẬT TOÁN BASELINE CŨ
+## 🖥️ SLIDE 3: BỐI CẢNH THỰC TẾ & THỬ THÁCH CỦA THUẬT TOÁN BASELINE CŨ
 
-*Mô hình baseline cũ dùng 1 ngưỡng Laplacian toàn cục duy nhất, dẫn đến 3 thất bại lớn:*
+*Mô hình baseline cũ áp dụng một ngưỡng Laplacian toàn cục cố định, dẫn đến 3 sai lệch lớn:*
 
-1. **Bẫy Camera phần cứng:**
-   * Cam A nét đạt ~1000 điểm; Cam B thấu kính mềm chỉ đạt ~250 điểm.
-   * ❌ **Hậu quả:** 100% ảnh sạch của Cam B bị phán oan là ảnh mờ (False Alarm)!
-2. **Bẫy lóa đèn pha (Glare):**
-   * Đèn pha rọi cháy trắng 1 góc ảnh, nhưng xung quanh vẫn có viền nét.
-   * ❌ **Hậu quả:** Baseline bỏ sót 100% các ca lóa đèn pha (Recall Glare = 0%)!
-3. **Bẫy trời tối ban đêm:**
-   * Ban đêm tự nhiên ít viền tương phản hơn ban ngày.
-   * ❌ **Hậu quả:** Baseline phán bừa 75% ảnh đêm là ảnh hỏng, quá tải reviewer!
+1. **Sai lệch phần cứng Camera:**
+   * Cam A nét đạt tiêu chuẩn ~1000 điểm; Cam B thấu kính mềm tự nhiên chỉ đạt ~250 điểm.
+   * ❌ **Hậu quả:** 100% ảnh đạt chuẩn của Cam B bị đánh giá nhầm là ảnh mờ (False Alarm)!
+2. **Lóa sáng cục bộ (Glare):**
+   * Đèn pha rọi làm cháy sáng bão hòa một vùng ảnh, nhưng xung quanh vẫn có chi tiết viền.
+   * ❌ **Hậu quả:** Baseline bỏ lọt 100% các trường hợp lóa sáng (Recall Glare = 0%)!
+3. **Điều kiện ban đêm:**
+   * Ban đêm cảnh vật ít viền tương phản hơn ban ngày.
+   * ❌ **Hậu quả:** Baseline báo nhầm tới 75% ảnh đêm hợp lệ thành ảnh lỗi, gây quá tải đội ngũ kiểm định!
 
 ---
 
@@ -63,18 +63,18 @@
 1. **Lỗi Mờ (Blur):** Chuẩn hóa theo camera: `lap_norm = lap / 1000` (Cam A) hoặc `lap / 250` (Cam B). Chỉ phạt khi độ nét tụt dưới 15% so với chuẩn camera.
 2. **Lỗi Tối (Dark):**
    * Ban ngày: Phạt khi độ sáng trung bình `mean < 40`.
-   * Ban đêm: Chỉ phạt khi tắt đèn ngúm (`mean < 15` và hơn 85% diện tích là pixel đen).
+   * Ban đêm: Chỉ ghi nhận lỗi khi môi trường thiếu sáng nghiêm trọng (`mean < 15` và hơn 85% diện tích là pixel tối).
 3. **Lỗi Lóa (Glare):** Quét tỷ lệ pixel cháy sáng bão hòa `sat > 0.003`.
 4. **Lỗi Nén (Compression):** Đo độ chênh lệch pixel tại biên khối JPEG 8x8.
 
 ### 🛡️ Cơ chế triệt tiêu lỗi chéo (Defect Masking):
-* Ảnh đen xì thì không có viền cạnh $\to$ Laplacian tự nhiên bằng 0.
+* Ảnh thiếu sáng nghiêm trọng sẽ mất toàn bộ viền cạnh → Phương sai Laplacian suy giảm mạnh.
 * **Quy tắc code:**
   ```python
   if s_dark > 0.4:
-      s_blur = 0.0  # Dập tắt lỗi mờ giả!
+      s_blur = 0.0  # Dập tắt hiện tượng dương tính giả với lỗi mờ!
   ```
-* Báo đúng 100% bệnh là `Dark` để chỉnh phơi sáng, tránh bắt kỹ thuật viên đi lau lens.
+* Xác định chính xác nguyên nhân cốt lõi là lỗi `Dark` để điều chỉnh phơi sáng, tránh yêu cầu bảo trì ống kính không cần thiết.
 
 ---
 
@@ -85,8 +85,8 @@
 | **Defect Recall@20 (Chỉ số chính)** | Toàn bộ ảnh | 0.5000 (10/20) | **0.8500 (17/20)** | **+70.0% vượt trội** |
 | **Precision@20** | Toàn bộ ảnh | 0.5000 | **0.8500** | **+70.0% tương đối** |
 | **Độ chính xác phân loại lỗi** | Toàn bộ ảnh lỗi | n/a | **0.7500** | **75.0% đúng bệnh** |
-| Báo oan ban đêm (False Alarm) | Ban đêm (night) | 0.7500 (75%) | **0.2500 (25%)** | **Giảm 3 lần báo oan** |
-| Báo oan chập tối (False Alarm) | Chập tối (dusk) | 0.5000 (50%) | **0.0000 (0%)** | **Sạch 100% báo oan** |
+| Tỷ lệ báo nhầm ban đêm (False Alarm) | Ban đêm (night) | 0.7500 (75%) | **0.2500 (25%)** | **Giảm 3 lần tỷ lệ báo nhầm** |
+| Tỷ lệ báo nhầm chập tối (False Alarm) | Chập tối (dusk) | 0.5000 (50%) | **0.0000 (0%)** | **Triệt tiêu báo nhầm (0.0%)** |
 | **Thời gian chạy / 100 ảnh** | Chạy trên CPU | 0.08 s | **0.43 s** | Dưới 0.5 giây |
 
 ---
@@ -107,47 +107,47 @@
 
 ## 🖥️ SLIDE 7: MINH CHỨNG: NHÓM ĐÃ GIẢI QUYẾT 2 CA KHÓ NHẤT
 
-*Hai ca lỗi kinh điển từng làm tê liệt hoàn toàn thuật toán baseline cũ nay đã được xử lý triệt để:*
+*Hai ca lỗi kinh điển từng làm sai lệch kết quả của thuật toán baseline cũ nay đã được xử lý triệt để:*
 
-### ✅ Ca Khó 1: Cứu Camera B Khỏi Bẫy Phán Oan (False Alarm)
-* **Bối cảnh:** Camera dòng B dùng thấu kính quang học mềm giá rẻ. Độ nét Laplacian tự nhiên chỉ đạt **~235 điểm** (trong khi Cam A xịn đạt ~1000).
-* **Thuật toán cũ (Baseline):** Dùng ngưỡng cố định > 500 $\implies$ Phán oan **100% ảnh sạch của Cam B là ảnh mờ (Blur)**, đòi vứt bỏ toàn bộ dữ liệu!
+### ✅ Ca Khó 1: Khắc Phục Sai Lệch Phần Cứng Camera B (Tránh Báo Nhầm)
+* **Bối cảnh:** Camera dòng B sử dụng thấu kính quang học mềm. Độ nét Laplacian nền tự nhiên chỉ đạt **~235 điểm** (so với Cam A đạt ~1000).
+* **Thuật toán cũ (Baseline):** Áp dụng ngưỡng cố định > 500 → Đánh giá nhầm **100% ảnh đạt chuẩn của Cam B là ảnh mờ (Blur)**, gây nguy cơ loại bỏ dữ liệu hợp lệ!
 * **Cách nhóm giải quyết:** Chuẩn hóa độ nét tương đối theo từng dòng camera:
-  $$\text{lap\_norm} = \frac{\text{lap}}{250} \quad (\text{với Cam B})$$
-* **Kết quả:** Ảnh đạt 235 điểm có $\text{lap\_norm} \approx 0.94 > 0.15 \implies$ Hệ thống công nhận là ảnh sạch đạt chuẩn (`none / KEEP`). **Cứu sống 100% dữ liệu Cam B!**
+  `lap_norm = lap / 250 (với Cam B)`
+* **Kết quả:** Ảnh đạt 235 điểm có `lap_norm ≈ 0.94 > 0.15` → Hệ thống phân loại chính xác là ảnh đạt chuẩn (`none / KEEP`). **Bảo toàn 100% dữ liệu hợp lệ của Camera B!**
 
-### ✅ Ca Khó 2: Tránh Chẩn Đoán Nhầm Bệnh (Dark vs Blur Masking)
-* **Bối cảnh:** Ảnh chụp ban ngày nhưng xe chui vào hầm tối hoặc hỏng cảm biến $\implies$ Cả bức ảnh đen kịt (như ảnh mẫu `img_02_3`).
-* **Thuật toán cũ (Baseline):** Ảnh đen xì thì không có viền cạnh $\implies$ Laplacian tụt về 0 $\implies$ **Phán nhầm là ảnh mờ (Blur)**! Thợ đi lau ống kính cả ngày vẫn không hết lỗi.
+### ✅ Ca Khó 2: Phân Định Rõ Ràng Lỗi Thiếu Sáng và Lỗi Mờ (Dark vs Blur)
+* **Bối cảnh:** Ảnh chụp ban ngày nhưng phương tiện di chuyển vào hầm tối hoặc cảm biến mất tín hiệu → Ảnh bị thiếu sáng nghiêm trọng (như mẫu `img_02_3`).
+* **Thuật toán cũ (Baseline):** Vùng tối không còn viền cạnh → Phương sai Laplacian suy giảm → **Đánh giá nhầm thành lỗi mờ (Blur)**, dẫn đến xử lý sai quy trình kỹ thuật.
 * **Cách nhóm giải quyết:** Thiết kế cơ chế triệt tiêu lỗi chéo:
   ```python
   if s_dark > 0.4:
-      s_blur = 0.0  # Dập tắt lỗi mờ giả!
+      s_blur = 0.0  # Dập tắt hiện tượng dương tính giả với lỗi mờ!
   ```
-* **Kết quả:** Dập tắt hoàn toàn lỗi mờ giả, **chẩn đoán đúng 100% bệnh là Dark (Thiếu sáng)** $\implies$ Yêu cầu đội xe tăng phơi sáng hoặc bật đèn pha thay vì lau kính.
+* **Kết quả:** Triệt tiêu hiện tượng dương tính giả với lỗi mờ, **xác định đúng 100% nguyên nhân là Dark (Thiếu sáng)** → Đưa ra khuyến nghị điều chỉnh phơi sáng chính xác.
 
 ---
 
 ## 🖥️ SLIDE 8: CÁC GIỚI HẠN MÀ GIẢI PHÁP NÀY CHƯA ĐẠT ĐƯỢC
 
-*Phân tích thẳng thắn các điểm nghẽn kỹ thuật và ca khó còn tồn tại:*
+*Phân tích khách quan các điểm nghẽn kỹ thuật và ca khó còn tồn tại:*
 
 1. **Bỏ sót lóa đèn cục bộ quá nhỏ (Local Specular Glare):**
    * *Hiện trạng:* Thuật toán tính tỷ lệ pixel bão hòa `sat > 0.003` trên toàn bộ bức ảnh.
-   * *Điểm chưa đạt:* Nếu đốm lóa đèn pha chỉ nhỏ li ti (< 0.1% diện tích) nhưng rọi trúng ngay biển số xe, tỷ lệ toàn ảnh không vượt ngưỡng nên bị bỏ sót (như ca lỗi `reports/failure_cases/glare_missed.png`).
+   * *Điểm chưa đạt:* Nếu đốm lóa có kích thước quá nhỏ (< 0.1% diện tích) nhưng rọi trúng ngay biển số xe, tỷ lệ toàn ảnh không vượt ngưỡng nên bị bỏ sót (như ca lỗi `reports/failure_cases/glare_missed.png`).
    * *Hướng khắc phục:* Bổ sung quét ô cục bộ (Patch-based scanning) hoặc mặt nạ vùng quan tâm (ROI Masking).
 
 2. **Khoảng cách miền dữ liệu (Sim-to-Real Domain Gap):**
-   * *Hiện trạng:* Toàn bộ 96 ảnh thử nghiệm là ảnh tổng hợp nhân tạo (Synthetic Procedural).
-   * *Điểm chưa đạt:* Chưa kiểm nghiệm trên dữ liệu camera thực tế ngoài đường với các hiện tượng phức tạp như: nhiễu hạt cảm biến động (sensor noise), vệt nước mưa trên kính lái (wiper streaks), hoặc ánh đèn đường chớp nháy (flickering LED).
-   * *Hướng khắc phục:* Mở rộng đánh giá trên các bộ dữ liệu thực tế như BDD100K hoặc ACDC.
+   * *Hiện trạng:* Toàn bộ 96 ảnh thử nghiệm là ảnh mô phỏng máy tính (Synthetic Procedural).
+   * *Điểm chưa đạt:* Chưa kiểm nghiệm trên dữ liệu thế giới thực phức tạp với các hiện tượng nhiễu hạt cảm biến động (dynamic sensor noise), vệt nước mưa trên kính lái (wiper streaks) hay đèn đường nhấp nháy.
+   * *Hướng khắc phục:* Mở rộng thử nghiệm trên các tập dữ liệu mở thực tế ngoài đường phố (BDD100K hoặc ACDC).
 
 3. **Chưa cộng dồn đa khiếm khuyết (Multi-defect Aggregation):**
-   * *Hiện trạng:* Thuật toán chọn lỗi có điểm cao nhất `score = max(...)`.
-   * *Điểm chưa đạt:* Nếu một bức ảnh vừa mờ nhẹ (score 0.28) vừa thiếu sáng nhẹ (score 0.28), điểm tổng vẫn chỉ là 0.28 (không vượt ngưỡng 0.3) nên bị đánh giá là ảnh sạch, dù thực tế chất lượng cộng dồn đã rất tệ.
+   * *Hiện trạng:* Thuật toán gộp điểm bằng hàm lấy giá trị lớn nhất `score = max(...)`.
+   * *Điểm chưa đạt:* Khi một bức ảnh vừa mờ nhẹ (0.28) vừa thiếu sáng nhẹ (0.28), điểm tổng vẫn chỉ là 0.28 (< 0.3 ngưỡng phạt) nên bị đánh giá là ảnh sạch, dù thực tế chất lượng cộng dồn đã rất tệ.
    * *Hướng khắc phục:* Chuyển sang mô hình chấm điểm kết hợp đa yếu tố (Weighted Multi-defect Scoring).
 
-4. **Ngưỡng cố định, chưa tự thích ứng (Dynamic Calibration):**
-   * *Hiện trạng:* Các thông số Cam A = 1000, Cam B = 250 là hằng số cố định (Hardcoded) được đo đạc từ tập `dev`.
-   * *Điểm chưa đạt:* Khi lắp một dòng camera mới (Cam C, Cam D) có đặc tính cảm biến khác lạ, hệ thống chưa tự học được baseline mà phải có kỹ sư phân tích lại từ đầu.
-   * *Hướng khắc phục:* Xây dựng mô-đun tự học ngưỡng nền động (Online Baseline Calibration) theo luồng streaming.
+4. **Ngưỡng cố định, chưa tự thích ứng (Dynamic Threshold):**
+   * *Hiện trạng:* Các thông số Cam A = 1000, Cam B = 250 là hằng số cố định được ước lượng từ tập dev.
+   * *Điểm chưa đạt:* Nếu bổ sung dòng camera mới có đặc tính quang học khác, hệ thống phải tiến hành phân tích và cấu hình lại bằng tay.
+   * *Hướng khắc phục:* Xây dựng cơ chế tự động học ngưỡng nền động (Online Baseline Calibration) từ luồng video.

@@ -323,7 +323,7 @@
         <div style="display: flex; flex-direction: column; gap: 14px;">
           <div class="stat-box">
             <div class="stat-val">85.0%</div>
-            <div class="stat-lbl">Defect Recall@20 (Tóm gọn 17/20 ảnh lỗi trong batch)</div>
+            <div class="stat-lbl">Defect Recall@20 (Phát hiện chính xác 17/20 ảnh lỗi trong batch)</div>
           </div>
           <div class="stat-box" style="background: #f0fdf4; border-color: #bbf7d0;">
             <div class="stat-val" style="color: #15803d;">0.43 giây</div>
@@ -392,7 +392,7 @@
       <div class="card" style="margin-top: 10px;">
         <h3>📌 Nguyên Tắc Vận Hành Demo Trên Màn Hình</h3>
         <p>• <strong>Bước 1:</strong> Khiêm mở file cấu hình <code>configs/tracks/t02.yaml</code>.<br>
-        • <strong>Bước 2:</strong> Phú mở file danh sách ảnh <code>fixtures/t02_raw_qc/images.csv</code> và 1 ảnh tối đen mẫu.<br>
+        • <strong>Bước 2:</strong> Phú mở file danh sách ảnh <code>fixtures/t02_raw_qc/images.csv</code> và 1 ảnh thiếu sáng mẫu.<br>
         • <strong>Bước 3:</strong> Hưng chạy lệnh <code>python -m src.main --track t02 --offline</code> và mở danh sách 20 ảnh.<br>
         • <strong>Bước 4:</strong> Đức mở <code>out/poc/contact_sheet.html</code> và click xác nhận 1 ảnh lỗi.<br>
         • <strong>Bước 5:</strong> Khiêm mở file quyết định cuối <code>decision.json</code> (REWORK).<br>
@@ -403,29 +403,29 @@
     <!-- SLIDE 3: BỐI CẢNH THỰC TẾ & BẪY CỦA THUẬT TOÁN CŨ -->
     <section class="slide" id="slide-3">
       <span class="step-badge">Bối Cảnh & Thử Thách Kỹ Thuật</span>
-      <h2>Ba Cái Bẫy Khiến Thuật Toán Baseline Cũ Thất Bại</h2>
-      <p class="subtitle">Nếu chỉ dùng 1 ngưỡng độ nét Laplacian toàn cục đơn giản, hệ thống sẽ mắc 3 sai lầm nghiêm trọng:</p>
+      <h2>Ba Thử Thách Lớn Khiến Thuật Toán Baseline Cũ Thất Bại</h2>
+      <p class="subtitle">Nếu chỉ áp dụng một ngưỡng độ nét Laplacian toàn cục cố định, hệ thống sẽ gặp 3 sai lệch nghiêm trọng:</p>
 
       <div class="grid-3">
         <div class="card" style="border-top: 5px solid #dc2626;">
-          <h3 style="color: #b91c1c;">1. Bẫy Camera (Hardware)</h3>
-          <p>• <strong>Cam A:</strong> Ống kính xịn, độ nét nền ~1000 điểm.<br>
-          • <strong>Cam B:</strong> Ống kính mềm giá rẻ, nét nhất chỉ ~250 điểm.</p>
-          <p style="margin-top: 8px; color: #b91c1c; font-weight: bold;">❌ Hậu quả: 100% ảnh sạch của Cam B bị phán oan là ảnh mờ (False Alarm)!</p>
+          <h3 style="color: #b91c1c;">1. Sai Lệch Phần Cứng Camera</h3>
+          <p>• <strong>Cam A:</strong> Ống kính quang học sắc nét, độ nét chuẩn ~1000 điểm.<br>
+          • <strong>Cam B:</strong> Ống kính quang học mềm, độ nét tự nhiên ~250 điểm.</p>
+          <p style="margin-top: 8px; color: #b91c1c; font-weight: bold;">❌ Hậu quả: 100% ảnh đạt chuẩn của Cam B bị đánh giá nhầm là ảnh mờ (False Alarm)!</p>
         </div>
 
         <div class="card" style="border-top: 5px solid #d97706;">
-          <h3 style="color: #b45309;">2. Bẫy Lóa Đèn (Glare)</h3>
-          <p>• Đèn pha rọi thẳng làm cháy trắng 1 góc ảnh.<br>
-          • Xung quanh khung hình vẫn có viền nét nên điểm Laplacian vẫn cao.</p>
-          <p style="margin-top: 8px; color: #b45309; font-weight: bold;">❌ Hậu quả: Baseline bỏ lọt 100% các ca lóa đèn pha (Recall Glare = 0%)!</p>
+          <h3 style="color: #b45309;">2. Lóa Sáng Cục Bộ (Glare)</h3>
+          <p>• Đèn pha rọi thẳng làm cháy sáng bão hòa một vùng ảnh.<br>
+          • Xung quanh khung hình vẫn có chi tiết viền nên phương sai Laplacian vẫn cao.</p>
+          <p style="margin-top: 8px; color: #b45309; font-weight: bold;">❌ Hậu quả: Baseline bỏ lọt 100% các trường hợp lóa sáng (Recall Glare = 0%)!</p>
         </div>
 
         <div class="card" style="border-top: 5px solid #4338ca;">
-          <h3 style="color: #3730a3;">3. Bẫy Trời Tối Ban Đêm</h3>
+          <h3 style="color: #3730a3;">3. Điều Kiện Ban Đêm</h3>
           <p>• Ban đêm cảnh vật ít viền tương phản hơn ban ngày.<br>
-          • Điểm độ nét sụt giảm tự nhiên theo ánh sáng môi trường.</p>
-          <p style="margin-top: 8px; color: #3730a3; font-weight: bold;">❌ Hậu quả: Baseline phán bừa 75% ảnh đêm là ảnh hỏng, quá tải reviewer!</p>
+          • Độ nét viền suy giảm tự nhiên theo ánh sáng môi trường.</p>
+          <p style="margin-top: 8px; color: #3730a3; font-weight: bold;">❌ Hậu quả: Baseline báo nhầm tới 75% ảnh đêm hợp lệ thành ảnh lỗi, gây quá tải đội ngũ kiểm định!</p>
         </div>
       </div>
     </section>
@@ -445,7 +445,7 @@
 
           <p style="margin-top: 10px;"><strong>2. Lỗi Tối (Dark):</strong> Chia theo ngày và đêm:<br>
           • Ban ngày: Phạt khi độ sáng trung bình <code>mean &lt; 40</code>.<br>
-          • Ban đêm: Chỉ phạt khi tắt đèn ngúm (<code>mean &lt; 15</code> và hơn 85% diện tích là pixel đen).</p>
+          • Ban đêm: Chỉ ghi nhận lỗi khi môi trường thiếu sáng nghiêm trọng (<code>mean &lt; 15</code> và hơn 85% diện tích là pixel tối).</p>
 
           <p style="margin-top: 10px;"><strong>3. Lỗi Lóa (Glare):</strong> Quét tỷ lệ pixel cháy sáng bão hòa <code>sat &gt; 0.003</code> (tức &gt; 0.3% diện tích bị cháy trắng).</p>
 
@@ -454,14 +454,14 @@
 
         <div class="card" style="background: #eff6ff; border-color: #93c5fd;">
           <h3 style="color: #1d4ed8;">🛡️ Cơ Chế Triệt Tiêu Lỗi Chéo (Defect Masking)</h3>
-          <p style="margin-bottom: 12px;">Một tấm ảnh đen kịt thì không có viền cạnh, nên điểm Laplacian sẽ tự động tụt về 0. Nếu code ẩu sẽ phán nó bị "Mờ".</p>
+          <p style="margin-bottom: 12px;">Một tấm ảnh thiếu sáng nghiêm trọng sẽ mất toàn bộ chi tiết viền cạnh, khiến phương sai Laplacian suy giảm mạnh. Nếu xử lý độc lập, hệ thống sẽ đánh giá nhầm thành lỗi "Mờ" (Blur).</p>
           
           <div style="background: #ffffff; border: 1.5px solid #bfdbfe; border-radius: 6px; padding: 14px; font-family: Courier New, monospace; font-size: 15px; color: #1e3a8a; font-weight: bold;">
             if s_dark > 0.4:<br>
-            &nbsp;&nbsp;&nbsp;&nbsp;s_blur = 0.0 &nbsp;&nbsp;# Dập tắt lỗi mờ giả!
+            &nbsp;&nbsp;&nbsp;&nbsp;s_blur = 0.0 &nbsp;&nbsp;# Dập tắt hiện tượng dương tính giả với lỗi mờ!
           </div>
 
-          <p style="margin-top: 14px;"><strong>Ý nghĩa thực tế:</strong> Hệ thống báo đúng bệnh là <code>Dark</code> để đội vận hành chỉnh lại độ phơi sáng camera, thay vì bắt nhân viên kỹ thuật đi lau ống kính.</p>
+          <p style="margin-top: 14px;"><strong>Ý nghĩa thực tế:</strong> Hệ thống xác định chính xác nguyên nhân cốt lõi là lỗi <code>Dark</code> để đội vận hành điều chỉnh phơi sáng, tránh yêu cầu bảo trì ống kính không cần thiết.</p>
         </div>
       </div>
     </section>
@@ -505,18 +505,18 @@
             <td class="good">75.0% đúng loại bệnh</td>
           </tr>
           <tr>
-            <td>Báo oan ban đêm (False Alarm)</td>
+            <td>Tỷ lệ báo nhầm ban đêm (False Alarm)</td>
             <td>Ban đêm (night)</td>
             <td>0.7500 (75%)</td>
             <td class="good">0.2500 (25%)</td>
-            <td class="good">Giảm 3 lần báo oan</td>
+            <td class="good">Giảm 3 lần tỷ lệ báo nhầm</td>
           </tr>
           <tr>
-            <td>Báo oan chập tối (False Alarm)</td>
+            <td>Tỷ lệ báo nhầm chập tối (False Alarm)</td>
             <td>Chập tối (dusk)</td>
             <td>0.5000 (50%)</td>
             <td class="good">0.0000 (0%)</td>
-            <td class="good">Sạch 100% báo oan</td>
+            <td class="good">Triệt tiêu báo nhầm (0.0%)</td>
           </tr>
           <tr>
             <td><strong>Thời gian chạy / 100 ảnh</strong></td>
@@ -556,25 +556,25 @@
     <section class="slide" id="slide-7">
       <span class="step-badge" style="background: #ecfdf5; color: #047857;">Minh Chứng Thực Nghiệm</span>
       <h2>Minh Chứng: Nhóm Đã Giải Quyết 2 Ca Khó Nhất</h2>
-      <p class="subtitle">Hai ca lỗi kinh điển từng làm tê liệt hoàn toàn thuật toán baseline cũ nay đã được xử lý triệt để:</p>
+      <p class="subtitle">Hai ca lỗi kinh điển từng làm sai lệch kết quả của thuật toán baseline cũ nay đã được xử lý triệt để:</p>
 
       <div class="grid-2">
         <div class="card" style="border-left: 5px solid #10b981;">
-          <h3 style="color: #047857;">✅ Ca Khó 1: Cứu Camera B Khỏi Bẫy Phán Oan (False Alarm)</h3>
-          <p>• <strong>Bối cảnh:</strong> Camera dòng B dùng thấu kính quang học mềm giá rẻ. Độ nét Laplacian tự nhiên chỉ đạt <strong>~235 điểm</strong> (trong khi Cam A xịn đạt ~1000).<br>
-          • <strong>Thuật toán cũ (Baseline):</strong> Dùng ngưỡng cố định &gt; 500 $\to$ Phán oan <strong>100% ảnh sạch của Cam B là ảnh mờ (Blur)</strong>, đòi vứt bỏ toàn bộ dữ liệu!<br>
+          <h3 style="color: #047857;">✅ Ca Khó 1: Khắc Phục Sai Lệch Phần Cứng Camera B (Tránh Báo Nhầm)</h3>
+          <p>• <strong>Bối cảnh:</strong> Camera dòng B sử dụng thấu kính quang học mềm. Độ nét Laplacian nền tự nhiên chỉ đạt <strong>~235 điểm</strong> (so với Cam A đạt ~1000).<br>
+          • <strong>Thuật toán cũ (Baseline):</strong> Áp dụng ngưỡng cố định &gt; 500 → Đánh giá nhầm <strong>100% ảnh đạt chuẩn của Cam B là ảnh mờ (Blur)</strong>, gây nguy cơ loại bỏ dữ liệu hợp lệ!<br>
           • <strong>Cách nhóm giải quyết:</strong> Chuẩn hóa độ nét tương đối theo từng dòng camera:<br>
           <code>lap_norm = lap / 250 (với Cam B)</code><br>
-          • <strong>Kết quả:</strong> Ảnh đạt 235 điểm có <code>lap_norm ≈ 0.94 &gt; 0.15</code> $\to$ Hệ thống công nhận là ảnh sạch đạt chuẩn (<code>none / KEEP</code>). <strong>Cứu sống 100% dữ liệu Cam B!</strong></p>
+          • <strong>Kết quả:</strong> Ảnh đạt 235 điểm có <code>lap_norm ≈ 0.94 &gt; 0.15</code> → Hệ thống phân loại chính xác là ảnh đạt chuẩn (<code>none / KEEP</code>). <strong>Bảo toàn 100% dữ liệu hợp lệ của Camera B!</strong></p>
         </div>
 
         <div class="card" style="border-left: 5px solid #2563eb;">
-          <h3 style="color: #1d4ed8;">✅ Ca Khó 2: Tránh Chẩn Đoán Nhầm Bệnh (Dark vs Blur)</h3>
-          <p>• <strong>Bối cảnh:</strong> Ảnh chụp ban ngày nhưng xe chui vào hầm tối hoặc hỏng cảm biến $\to$ Cả bức ảnh đen kịt (như ảnh mẫu <code>img_02_3</code>).<br>
-          • <strong>Thuật toán cũ (Baseline):</strong> Ảnh đen xì thì không có viền cạnh $\to$ Laplacian tụt về 0 $\to$ <strong>Phán nhầm là ảnh mờ (Blur)</strong>! Thợ đi lau ống kính cả ngày vẫn không hết lỗi.<br>
+          <h3 style="color: #1d4ed8;">✅ Ca Khó 2: Phân Định Rõ Ràng Lỗi Thiếu Sáng và Lỗi Mờ (Dark vs Blur)</h3>
+          <p>• <strong>Bối cảnh:</strong> Ảnh chụp ban ngày nhưng phương tiện di chuyển vào hầm tối hoặc cảm biến mất tín hiệu → Ảnh bị thiếu sáng nghiêm trọng (như mẫu <code>img_02_3</code>).<br>
+          • <strong>Thuật toán cũ (Baseline):</strong> Vùng tối không còn viền cạnh → Phương sai Laplacian suy giảm → <strong>Đánh giá nhầm thành lỗi mờ (Blur)</strong>, dẫn đến xử lý sai quy trình kỹ thuật.<br>
           • <strong>Cách nhóm giải quyết:</strong> Thiết kế cơ chế triệt tiêu lỗi chéo:<br>
           <code>if s_dark > 0.4: s_blur = 0.0</code><br>
-          • <strong>Kết quả:</strong> Dập tắt hoàn toàn lỗi mờ giả, <strong>chẩn đoán đúng 100% bệnh là Dark (Thiếu sáng)</strong> $\to$ Yêu cầu đội xe tăng phơi sáng hoặc bật đèn pha.</p>
+          • <strong>Kết quả:</strong> Triệt tiêu hiện tượng dương tính giả với lỗi mờ, <strong>xác định đúng 100% nguyên nhân là Dark (Thiếu sáng)</strong> → Đưa ra khuyến nghị điều chỉnh phơi sáng chính xác.</p>
         </div>
       </div>
     </section>
@@ -589,7 +589,7 @@
         <div class="card" style="border-left: 5px solid #dc2626;">
           <h3 style="color: #b91c1c;">1. Bỏ Sót Lóa Đèn Cục Bộ Quá Nhỏ (Local Glare)</h3>
           <p>• <strong>Vấn đề:</strong> Thuật toán hiện tại tính tỷ lệ bão hòa <code>sat</code> trên toàn bộ diện tích ảnh (ngưỡng <code>sat > 0.003</code>).<br>
-          • <strong>Điểm chưa đạt:</strong> Nếu đốm lóa chỉ nhỏ li ti (&lt; 0.1% diện tích) nhưng nằm trúng ngay vị trí biển số xe, tỷ lệ toàn ảnh không vượt ngưỡng nên sẽ bị bỏ sót (như ca lỗi <code>reports/failure_cases/glare_missed.png</code>).<br>
+          • <strong>Điểm chưa đạt:</strong> Nếu đốm lóa có kích thước quá nhỏ (&lt; 0.1% diện tích) nhưng nằm trúng ngay vị trí biển số xe, tỷ lệ toàn ảnh không vượt ngưỡng nên sẽ bị bỏ sót (như ca lỗi <code>reports/failure_cases/glare_missed.png</code>).<br>
           • <strong>Hướng khắc phục:</strong> Bổ sung quét lưới ô cục bộ (Patch-based scanning) hoặc vùng quan tâm (ROI Masking).</p>
         </div>
 
