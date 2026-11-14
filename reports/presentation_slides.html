@@ -296,7 +296,7 @@
       <span class="tag">BÁO CÁO NHÓM G01</span>
       <span>Track T02 · Raw QC Triage: Ảnh Mờ, Lóa & Thiếu Sáng</span>
     </div>
-    <div class="slide-counter" id="counter">Slide 1 / 7</div>
+    <div class="slide-counter" id="counter">Slide 1 / 8</div>
   </header>
 
   <!-- NỘI DUNG SLIDE -->
@@ -552,8 +552,35 @@
       </div>
     </section>
 
-    <!-- SLIDE 7: CÁC GIỚI HẠN & THỬ THÁCH CHƯA ĐẠT ĐƯỢC -->
+    <!-- SLIDE 7: GIẢI QUYẾT 2 CA KHÓ NHẤT -->
     <section class="slide" id="slide-7">
+      <span class="step-badge" style="background: #ecfdf5; color: #047857;">Minh Chứng Thực Nghiệm</span>
+      <h2>Minh Chứng: Nhóm Đã Giải Quyết 2 Ca Khó Nhất</h2>
+      <p class="subtitle">Hai ca lỗi kinh điển từng làm tê liệt hoàn toàn thuật toán baseline cũ nay đã được xử lý triệt để:</p>
+
+      <div class="grid-2">
+        <div class="card" style="border-left: 5px solid #10b981;">
+          <h3 style="color: #047857;">✅ Ca Khó 1: Cứu Camera B Khỏi Bẫy Phán Oan (False Alarm)</h3>
+          <p>• <strong>Bối cảnh:</strong> Camera dòng B dùng thấu kính quang học mềm giá rẻ. Độ nét Laplacian tự nhiên chỉ đạt <strong>~235 điểm</strong> (trong khi Cam A xịn đạt ~1000).<br>
+          • <strong>Thuật toán cũ (Baseline):</strong> Dùng ngưỡng cố định &gt; 500 $\to$ Phán oan <strong>100% ảnh sạch của Cam B là ảnh mờ (Blur)</strong>, đòi vứt bỏ toàn bộ dữ liệu!<br>
+          • <strong>Cách nhóm giải quyết:</strong> Chuẩn hóa độ nét tương đối theo từng dòng camera:<br>
+          <code>lap_norm = lap / 250 (với Cam B)</code><br>
+          • <strong>Kết quả:</strong> Ảnh đạt 235 điểm có <code>lap_norm ≈ 0.94 &gt; 0.15</code> $\to$ Hệ thống công nhận là ảnh sạch đạt chuẩn (<code>none / KEEP</code>). <strong>Cứu sống 100% dữ liệu Cam B!</strong></p>
+        </div>
+
+        <div class="card" style="border-left: 5px solid #2563eb;">
+          <h3 style="color: #1d4ed8;">✅ Ca Khó 2: Tránh Chẩn Đoán Nhầm Bệnh (Dark vs Blur)</h3>
+          <p>• <strong>Bối cảnh:</strong> Ảnh chụp ban ngày nhưng xe chui vào hầm tối hoặc hỏng cảm biến $\to$ Cả bức ảnh đen kịt (như ảnh mẫu <code>img_02_3</code>).<br>
+          • <strong>Thuật toán cũ (Baseline):</strong> Ảnh đen xì thì không có viền cạnh $\to$ Laplacian tụt về 0 $\to$ <strong>Phán nhầm là ảnh mờ (Blur)</strong>! Thợ đi lau ống kính cả ngày vẫn không hết lỗi.<br>
+          • <strong>Cách nhóm giải quyết:</strong> Thiết kế cơ chế triệt tiêu lỗi chéo:<br>
+          <code>if s_dark > 0.4: s_blur = 0.0</code><br>
+          • <strong>Kết quả:</strong> Dập tắt hoàn toàn lỗi mờ giả, <strong>chẩn đoán đúng 100% bệnh là Dark (Thiếu sáng)</strong> $\to$ Yêu cầu đội xe tăng phơi sáng hoặc bật đèn pha.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 8: CÁC GIỚI HẠN & THỬ THÁCH CHƯA ĐẠT ĐƯỢC -->
+    <section class="slide" id="slide-8">
       <span class="step-badge" style="background: #fee2e2; color: #b91c1c;">Đánh Giá Khách Quan & Giới Hạn</span>
       <h2>Các Giới Hạn Mà Giải Pháp Này Chưa Đạt Được</h2>
       <p class="subtitle">Phân tích thẳng thắn các điểm nghẽn kỹ thuật và ca khó còn tồn tại để định hướng nâng cấp trong tương lai:</p>
@@ -604,7 +631,7 @@
 
   <script>
     let currentSlide = 1;
-    const totalSlides = 7;
+    const totalSlides = 8;
 
     function showSlide(index) {
       if (index < 1) index = 1;

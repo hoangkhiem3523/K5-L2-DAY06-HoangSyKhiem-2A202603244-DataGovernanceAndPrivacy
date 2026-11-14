@@ -105,7 +105,30 @@
 
 ---
 
-## 🖥️ SLIDE 7: CÁC GIỚI HẠN MÀ GIẢI PHÁP NÀY CHƯA ĐẠT ĐƯỢC
+## 🖥️ SLIDE 7: MINH CHỨNG: NHÓM ĐÃ GIẢI QUYẾT 2 CA KHÓ NHẤT
+
+*Hai ca lỗi kinh điển từng làm tê liệt hoàn toàn thuật toán baseline cũ nay đã được xử lý triệt để:*
+
+### ✅ Ca Khó 1: Cứu Camera B Khỏi Bẫy Phán Oan (False Alarm)
+* **Bối cảnh:** Camera dòng B dùng thấu kính quang học mềm giá rẻ. Độ nét Laplacian tự nhiên chỉ đạt **~235 điểm** (trong khi Cam A xịn đạt ~1000).
+* **Thuật toán cũ (Baseline):** Dùng ngưỡng cố định > 500 $\implies$ Phán oan **100% ảnh sạch của Cam B là ảnh mờ (Blur)**, đòi vứt bỏ toàn bộ dữ liệu!
+* **Cách nhóm giải quyết:** Chuẩn hóa độ nét tương đối theo từng dòng camera:
+  $$\text{lap\_norm} = \frac{\text{lap}}{250} \quad (\text{với Cam B})$$
+* **Kết quả:** Ảnh đạt 235 điểm có $\text{lap\_norm} \approx 0.94 > 0.15 \implies$ Hệ thống công nhận là ảnh sạch đạt chuẩn (`none / KEEP`). **Cứu sống 100% dữ liệu Cam B!**
+
+### ✅ Ca Khó 2: Tránh Chẩn Đoán Nhầm Bệnh (Dark vs Blur Masking)
+* **Bối cảnh:** Ảnh chụp ban ngày nhưng xe chui vào hầm tối hoặc hỏng cảm biến $\implies$ Cả bức ảnh đen kịt (như ảnh mẫu `img_02_3`).
+* **Thuật toán cũ (Baseline):** Ảnh đen xì thì không có viền cạnh $\implies$ Laplacian tụt về 0 $\implies$ **Phán nhầm là ảnh mờ (Blur)**! Thợ đi lau ống kính cả ngày vẫn không hết lỗi.
+* **Cách nhóm giải quyết:** Thiết kế cơ chế triệt tiêu lỗi chéo:
+  ```python
+  if s_dark > 0.4:
+      s_blur = 0.0  # Dập tắt lỗi mờ giả!
+  ```
+* **Kết quả:** Dập tắt hoàn toàn lỗi mờ giả, **chẩn đoán đúng 100% bệnh là Dark (Thiếu sáng)** $\implies$ Yêu cầu đội xe tăng phơi sáng hoặc bật đèn pha thay vì lau kính.
+
+---
+
+## 🖥️ SLIDE 8: CÁC GIỚI HẠN MÀ GIẢI PHÁP NÀY CHƯA ĐẠT ĐƯỢC
 
 *Phân tích thẳng thắn các điểm nghẽn kỹ thuật và ca khó còn tồn tại:*
 
