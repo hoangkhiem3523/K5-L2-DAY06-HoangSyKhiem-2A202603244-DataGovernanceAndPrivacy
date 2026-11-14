@@ -20,9 +20,6 @@
   * **Recall@20:** 85.0% (bắt trúng 17/20 ảnh lỗi trong batch).
   * **Thời gian thực thi:** 0.43 giây (chạy offline trên CPU thường).
 
-> **🗣️ Lời thoại Trưởng nhóm (Khiêm):**  
-> *"Kính thưa thầy, nhóm em giải quyết bài toán: Ảnh camera xe tự hành gửi về liên tục bị mờ, lóa và tối đen. Nhóm xây dựng một bộ lọc 5 bước xử lý siêu tốc 0.4 giây, bốc trúng 85% ảnh lỗi ném vào hàng đợi cho người duyệt với ngân sách chỉ 20 tấm."*
-
 ---
 
 ## 🖥️ SLIDE 2: SƠ ĐỒ 6 BƯỚC DEMO THEO ĐÚNG MÁY CHIẾU
@@ -42,9 +39,6 @@
   * **Bước 5 (Khiêm):** Mở file `decision.json` (quyết định REWORK).
   * **Bước 6 (Thiên):** Mở bảng so sánh `reports/table1_baseline_vs_poc.md` và chỉ ra ca khó lóa đèn pha `glare_missed.png`.
 
-> **🗣️ Lời thoại:**  
-> *"Thưa thầy, nhóm em tuân thủ nghiêm ngặt khung trình bày 6 bước: đi từ việc nạp ảnh mẫu thô, chạy bộ lọc tự động, đưa lên bàn cho reviewer duyệt, áp quyết định và đánh giá ca khó còn tồn tại."*
-
 ---
 
 ## 🖥️ SLIDE 3: BỐI CẢNH THỰC TẾ & BẪY CỦA THUẬT TOÁN BASELINE CŨ
@@ -60,9 +54,6 @@
 3. **Bẫy trời tối ban đêm:**
    * Ban đêm tự nhiên ít viền tương phản hơn ban ngày.
    * ❌ **Hậu quả:** Baseline phán bừa 75% ảnh đêm là ảnh hỏng, quá tải reviewer!
-
-> **🗣️ Lời thoại (Phú - Data):**  
-> *"Thưa thầy, đây là 3 ca lỗi điển hình mà nhóm đã chứng minh bằng ảnh trong thư mục `reports/failure_cases/`. Baseline ngây thơ dùng 1 con số cho tất cả camera và môi trường nên hoàn toàn bị bế tắc."*
 
 ---
 
@@ -85,9 +76,6 @@
   ```
 * Báo đúng 100% bệnh là `Dark` để chỉnh phơi sáng, tránh bắt kỹ thuật viên đi lau lens.
 
-> **🗣️ Lời thoại (Hưng - Core):**  
-> *"Các ngưỡng 1000, 250, 40, 15 được nhóm tính toán từ phân tích thống kê trên 56 ảnh tập dev. Đặc biệt, nhóm có cơ chế dập lỗi mờ giả khi ảnh bị tối đen để đảm bảo phân loại đúng bệnh."*
-
 ---
 
 ## 🖥️ SLIDE 5: KẾT QUẢ THỰC NGHIỆM ĐỐI SÁNH (BASELINE VS POC)
@@ -101,12 +89,9 @@
 | Báo oan chập tối (False Alarm) | Chập tối (dusk) | 0.5000 (50%) | **0.0000 (0%)** | **Sạch 100% báo oan** |
 | **Thời gian chạy / 100 ảnh** | Chạy trên CPU | 0.08 s | **0.43 s** | Dưới 0.5 giây |
 
-> **🗣️ Lời thoại (Thiên - QA):**  
-> *"So với mô hình cũ chỉ tìm được 10 ảnh lỗi, thuật toán của nhóm đã tìm ra 17/20 ảnh lỗi thật, đưa Recall lên 85%. Đặc biệt dập tắt hoàn toàn báo oan lúc chập tối (0%) và giảm báo oan ban đêm xuống chỉ còn 25%."*
-
 ---
 
-## 🖥️ SLIDE 6: GIAO DIỆN VẬN HÀNH & KẾT LUẬN
+## 🖥️ SLIDE 6: GIAO DIỆN VẬN HÀNH & QUẢN TRỊ DỮ LIỆU
 
 ### 1. Giao diện Reviewer thực tế: Contact Sheet HTML
 * File `out/poc/contact_sheet.html` hiển thị lưới 20 ảnh trực quan kèm điểm số và loại lỗi.
