@@ -296,7 +296,7 @@
       <span class="tag">BÁO CÁO NHÓM G01</span>
       <span>Track T02 · Raw QC Triage: Ảnh Mờ, Lóa & Thiếu Sáng</span>
     </div>
-    <div class="slide-counter" id="counter">Slide 1 / 6</div>
+    <div class="slide-counter" id="counter">Slide 1 / 7</div>
   </header>
 
   <!-- NỘI DUNG SLIDE -->
@@ -570,9 +570,42 @@
           • <strong>Tính toàn vẹn:</strong> Khớp 100% mã băm SHA-256 qua file <code>manifest.csv</code>.</p>
         </div>
       </div>
+    </section>
 
-      <div class="speaker-note">
-        <strong>🗣️ Lời kết (Khiêm - Trưởng nhóm):</strong> "Dự án T02 của nhóm G01 không chỉ là một bài toán code đơn thuần, mà là một quy trình Data Governance hoàn chỉnh từ khâu lọc ảnh thô đến khi ra quyết định phát hành an toàn. Nhóm em xin cảm ơn thầy và các bạn đã lắng nghe!"
+    <!-- SLIDE 7: CÁC GIỚI HẠN & THỬ THÁCH CHƯA ĐẠT ĐƯỢC -->
+    <section class="slide" id="slide-7">
+      <span class="step-badge" style="background: #fee2e2; color: #b91c1c;">Đánh Giá Khách Quan & Giới Hạn</span>
+      <h2>Các Giới Hạn Mà Giải Pháp Này Chưa Đạt Được</h2>
+      <p class="subtitle">Phân tích thẳng thắn các điểm nghẽn kỹ thuật và ca khó còn tồn tại để định hướng nâng cấp trong tương lai:</p>
+
+      <div class="grid-2">
+        <div class="card" style="border-left: 5px solid #dc2626;">
+          <h3 style="color: #b91c1c;">1. Bỏ Sót Lóa Đèn Cục Bộ Quá Nhỏ (Local Glare)</h3>
+          <p>• <strong>Vấn đề:</strong> Thuật toán hiện tại tính tỷ lệ bão hòa <code>sat</code> trên toàn bộ diện tích ảnh (ngưỡng <code>sat > 0.003</code>).<br>
+          • <strong>Điểm chưa đạt:</strong> Nếu đốm lóa chỉ nhỏ li ti (&lt; 0.1% diện tích) nhưng nằm trúng ngay vị trí biển số xe, tỷ lệ toàn ảnh không vượt ngưỡng nên sẽ bị bỏ sót (như ca lỗi <code>reports/failure_cases/glare_missed.png</code>).<br>
+          • <strong>Hướng khắc phục:</strong> Bổ sung quét lưới ô cục bộ (Patch-based scanning) hoặc vùng quan tâm (ROI Masking).</p>
+        </div>
+
+        <div class="card" style="border-left: 5px solid #d97706;">
+          <h3 style="color: #b45309;">2. Khoảng Cách Miền Dữ Liệu (Sim-to-Real Domain Gap)</h3>
+          <p>• <strong>Vấn đề:</strong> Toàn bộ 96 ảnh thử nghiệm là ảnh mô phỏng máy tính (Synthetic Procedural).<br>
+          • <strong>Điểm chưa đạt:</strong> Chưa kiểm nghiệm trên dữ liệu thế giới thực phức tạp với các hiện tượng nhiễu hạt cảm biến động (dynamic sensor noise), vệt nước mưa trên kính lái (wiper streaks) hay đèn đường nhấp nháy.<br>
+          • <strong>Hướng khắc phục:</strong> Mở rộng thử nghiệm trên các tập dữ liệu mở thực tế ngoài đường phố (BDD100K hoặc ACDC).</p>
+        </div>
+
+        <div class="card" style="border-left: 5px solid #2563eb;">
+          <h3 style="color: #1e3a8a;">3. Chưa Cộng Dồn Đa Khiếm Khuyết (Multi-defect)</h3>
+          <p>• <strong>Vấn đề:</strong> Thuật toán gộp điểm bằng hàm lấy giá trị lớn nhất <code>score = max(...)</code>.<br>
+          • <strong>Điểm chưa đạt:</strong> Khi một bức ảnh vừa mờ nhẹ (0.28) vừa tối nhẹ (0.28), điểm tổng vẫn chỉ là 0.28 (không vượt ngưỡng 0.3) nên bị đánh giá là ảnh sạch, dù thực tế chất lượng cộng dồn đã rất tệ.<br>
+          • <strong>Hướng khắc phục:</strong> Chuyển sang mô hình chấm điểm kết hợp đa yếu tố (Weighted Multi-defect Scoring).</p>
+        </div>
+
+        <div class="card" style="border-left: 5px solid #475569;">
+          <h3 style="color: #334155;">4. Ngưỡng Cố Định, Chưa Tự Thích Ứng (Dynamic Threshold)</h3>
+          <p>• <strong>Vấn đề:</strong> Các thông số Cam A = 1000, Cam B = 250 là hằng số cố định (Hardcoded) được nhóm tự tìm từ tập dev.<br>
+          • <strong>Điểm chưa đạt:</strong> Nếu đội xe lắp thêm một dòng camera mới (Cam C, Cam D) có đặc tính quang học khác, hệ thống sẽ phải phân tích lại bằng tay.<br>
+          • <strong>Hướng khắc phục:</strong> Xây dựng cơ chế tự động học ngưỡng baseline (Online Baseline Calibration) từ luồng video.</p>
+        </div>
       </div>
     </section>
 
@@ -591,7 +624,7 @@
 
   <script>
     let currentSlide = 1;
-    const totalSlides = 6;
+    const totalSlides = 7;
 
     function showSlide(index) {
       if (index < 1) index = 1;

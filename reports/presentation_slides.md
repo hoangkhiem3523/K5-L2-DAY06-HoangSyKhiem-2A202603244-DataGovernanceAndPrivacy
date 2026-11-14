@@ -118,5 +118,28 @@
 * **Quyền riêng tư:** 100% synthetic procedural, không PII, tuân thủ Nghị định 13/2023/NĐ-CP.
 * **Toàn vẹn:** Khớp 100% mã băm SHA-256 qua `manifest.csv`.
 
-> **🗣️ Lời kết (Khiêm - Trưởng nhóm):**  
-> *"Dự án T02 của nhóm G01 không chỉ là một bài toán code đơn thuần, mà là một quy trình Data Governance hoàn chỉnh từ khâu lọc ảnh thô đến khi ra quyết định phát hành an toàn. Nhóm em xin cảm ơn thầy và các bạn đã lắng nghe!"*
+---
+
+## 🖥️ SLIDE 7: CÁC GIỚI HẠN MÀ GIẢI PHÁP NÀY CHƯA ĐẠT ĐƯỢC
+
+*Phân tích thẳng thắn các điểm nghẽn kỹ thuật và ca khó còn tồn tại:*
+
+1. **Bỏ sót lóa đèn cục bộ quá nhỏ (Local Specular Glare):**
+   * *Hiện trạng:* Thuật toán tính tỷ lệ pixel bão hòa `sat > 0.003` trên toàn bộ bức ảnh.
+   * *Điểm chưa đạt:* Nếu đốm lóa đèn pha chỉ nhỏ li ti (< 0.1% diện tích) nhưng rọi trúng ngay biển số xe, tỷ lệ toàn ảnh không vượt ngưỡng nên bị bỏ sót (như ca lỗi `reports/failure_cases/glare_missed.png`).
+   * *Hướng khắc phục:* Bổ sung quét ô cục bộ (Patch-based scanning) hoặc mặt nạ vùng quan tâm (ROI Masking).
+
+2. **Khoảng cách miền dữ liệu (Sim-to-Real Domain Gap):**
+   * *Hiện trạng:* Toàn bộ 96 ảnh thử nghiệm là ảnh tổng hợp nhân tạo (Synthetic Procedural).
+   * *Điểm chưa đạt:* Chưa kiểm nghiệm trên dữ liệu camera thực tế ngoài đường với các hiện tượng phức tạp như: nhiễu hạt cảm biến động (sensor noise), vệt nước mưa trên kính lái (wiper streaks), hoặc ánh đèn đường chớp nháy (flickering LED).
+   * *Hướng khắc phục:* Mở rộng đánh giá trên các bộ dữ liệu thực tế như BDD100K hoặc ACDC.
+
+3. **Chưa cộng dồn đa khiếm khuyết (Multi-defect Aggregation):**
+   * *Hiện trạng:* Thuật toán chọn lỗi có điểm cao nhất `score = max(...)`.
+   * *Điểm chưa đạt:* Nếu một bức ảnh vừa mờ nhẹ (score 0.28) vừa thiếu sáng nhẹ (score 0.28), điểm tổng vẫn chỉ là 0.28 (không vượt ngưỡng 0.3) nên bị đánh giá là ảnh sạch, dù thực tế chất lượng cộng dồn đã rất tệ.
+   * *Hướng khắc phục:* Chuyển sang mô hình chấm điểm kết hợp đa yếu tố (Weighted Multi-defect Scoring).
+
+4. **Ngưỡng cố định, chưa tự thích ứng (Dynamic Calibration):**
+   * *Hiện trạng:* Các thông số Cam A = 1000, Cam B = 250 là hằng số cố định (Hardcoded) được đo đạc từ tập `dev`.
+   * *Điểm chưa đạt:* Khi lắp một dòng camera mới (Cam C, Cam D) có đặc tính cảm biến khác lạ, hệ thống chưa tự học được baseline mà phải có kỹ sư phân tích lại từ đầu.
+   * *Hướng khắc phục:* Xây dựng mô-đun tự học ngưỡng nền động (Online Baseline Calibration) theo luồng streaming.
